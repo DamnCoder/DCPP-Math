@@ -512,11 +512,3 @@ operator* (const Real k, const Vector3<Real>& v)
 {
     return Vector3<Real> (k * v.x, k * v.y, k * v.z);
 }
-
-template <typename Real>
-std::ostream&
-operator << (std::ostream &output, const Vector3<Real>& v)
-{
-    output << "(" << v.x << ", " << v.y << ", " << v.z << ")";
-    return output;
-}

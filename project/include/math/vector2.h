@@ -11,9 +11,6 @@
 #ifndef bitthemall_vector2_h
 #define bitthemall_vector2_h
 
-#include "math.h"
-#include <iostream>
-
 namespace dc
 {
 namespace math
@@ -115,15 +112,7 @@ namespace math
     typedef Vector2<double> UVd;
     
     typedef Vector2<int> Vector2i;
-    
-    template <typename Number>
-    std::ostream&
-    operator << (std::ostream &output, const Vector2<Number>& v)
-    {
-        output << "(" << v.x << ", " << v.y <<")";
-        return output;
-    }
-    
+
     #include "vector2.inl"
 }
 }

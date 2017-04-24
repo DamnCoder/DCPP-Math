@@ -11,7 +11,7 @@
 #ifndef bitthemall_quaternion_h
 #define bitthemall_quaternion_h
 
-#include "math.h"
+#include "dcmath.h"
 
 namespace dc
 {

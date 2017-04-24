@@ -1,5 +1,5 @@
 //
-//  real.h
+//  dcmath.h
 //
 //  A small group of utility functions to be used with real numbers.
 //
@@ -140,7 +140,7 @@ namespace math
     inline
     const Real Normal(const Real a, const Real b, const Real c, const Real d)
     {
-        return sqrt(a * a + b * b + c * c + d * d);
+        return Sqrt(a * a + b * b + c * c + d * d);
     }
     
     template<typename Real>

@@ -11,8 +11,7 @@
 #ifndef bitthemall_vector_h
 #define bitthemall_vector_h
 
-#include <iostream>
-#include "math.h"
+#include "dcmath.h"
 
 namespace dc
 {
@@ -46,9 +45,9 @@ namespace math
         static Vector3<Real> FromPolarAngles(Real azimuth, Real zenith);
         static Vector3<Real> UnitVectorFromOrientation(Real degrees);
         
-        static Real DotProduct (const Vector3<Real>& a, const Vector3<Real>& b);
-        static Vector3<Real> CrossProduct (const Vector3<Real>& a, const Vector3<Real>& b);
-        static Vector3<Real> ComputeNormal (const Vector3<Real>& p1, const Vector3<Real>& p2, const Vector3<Real>& p3);
+        static Real				DotProduct (const Vector3<Real>& a, const Vector3<Real>& b);
+        static Vector3<Real>	CrossProduct (const Vector3<Real>& a, const Vector3<Real>& b);
+        static Vector3<Real>	ComputeNormal (const Vector3<Real>& p1, const Vector3<Real>& p2, const Vector3<Real>& p3);
         
         static Real Distance (const Vector3<Real>& from, const Vector3<Real>& to);
         static Real DistanceSquared (const Vector3<Real>& from, const Vector3<Real>& to);
@@ -154,11 +153,7 @@ namespace math
 	template <typename Real>
 	Vector3<Real>
     operator* (const Real k, const Vector3<Real>& v);
-    
-    template <typename Real>
-    std::ostream&
-    operator << (std::ostream &output, const Vector3<Real>& v);
-    
+
     #include "vector3.inl"
 }
 }
