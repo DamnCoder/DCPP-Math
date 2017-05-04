@@ -23,17 +23,19 @@ Matrix4x4<Real>::Frustum (Real l, Real r, Real b, Real t, Real n, Real f)
 	
 	Matrix4x4<Real> res;
 	
+	Real nn = 2 * n;
+	
 	Real width  = r - l;
 	Real height = t - b;
 	Real depth  = f - n;
 	
-	res.m[0] = (2 * n) / width;
+	res.m[0] = (nn) / width;
 	res.m[1] = 0.0;
 	res.m[2] = 0.0;
 	res.m[3] = 0.0;
 	
 	res.m[4] = 0.0;
-	res.m[5] = (2 * n) / height;
+	res.m[5] = (nn) / height;
 	res.m[6] = 0.0;
 	res.m[7] = 0.0;
 	
@@ -44,7 +46,7 @@ Matrix4x4<Real>::Frustum (Real l, Real r, Real b, Real t, Real n, Real f)
 	
 	res.m[12]= 0.0;
 	res.m[13]= 0.0;
-	res.m[14]= -(2 * f * n) / depth;
+	res.m[14]= -(nn * f) / depth;
 	res.m[15]= 0.0;
 	
 	return res;
@@ -101,43 +103,37 @@ Matrix4x4<Real>::Orthographic (Real l, Real r, Real b, Real t, Real n, Real f)
 template <typename Real>
 inline
 Matrix4x4<Real>
-Matrix4x4<Real>::Perspective (Real fovY, Real aspect, Real n, Real f)
+Matrix4x4<Real>::Perspective (Real fovY, Real aspect, Real near, Real far)
 {
 	Matrix4x4<Real> res;
 	
-	Real angle;
-	Real cot;
+	Real tan = std::tan (DegToRad(fovY * 0.5));
 	
-	angle = fovY / 2.0;
-	angle = DegToRad(angle);
-	
-	cot = std::cos (angle) / std::sin (angle);
-	
-	res.m[0] = cot / aspect;
+	res.m[0] = 1.0 / (tan * aspect);
 	res.m[1] = 0.0;
 	res.m[2] = 0.0;
 	res.m[3] = 0.0;
 	
 	res.m[4] = 0.0;
-	res.m[5] = cot;
+	res.m[5] = 1.0 / tan;
 	res.m[6] = 0.0;
 	res.m[7] = 0.0;
 	
 	res.m[8] = 0.0;
 	res.m[9] = 0.0;
-	res.m[10]= -(f + n) / (f - n);
+	res.m[10]= -(far + near) / (far - near);
 	res.m[11]= -1.0;
 	
 	res.m[12]= 0.0;
 	res.m[13]= 0.0;
-	res.m[14]= -(2 * f * n) / (f - n);
+	res.m[14]= -(2 * far * near) / (far - near);
 	res.m[15]= 0.0;
 	
 	return res;
 }
 
 // --------------------------------------------------------------------------
-// LookAt (Left Handed)
+// LookAt (Right Handed)
 
 // Setup a new matrix to perform a "Look At" transformation like a first
 // person camera.
@@ -150,10 +146,10 @@ Matrix4x4<Real>::LookAt(const Vector3<Real>& eye, const Vector3<Real>& target, c
 	Vector3<Real> forward((target - eye));
 	forward.Normalize();
 	
-	Vector3<Real> right(Vector3<Real>::CrossProduct(camUp, forward));
+	Vector3<Real> right(Vector3<Real>::CrossProduct(forward, camUp));
 	right.Normalize();
 	
-	Vector3<Real> up(Vector3<Real>::CrossProduct(forward, right));
+	Vector3<Real> up(Vector3<Real>::CrossProduct(right, forward));
 	up.Normalize();
 	
 	Matrix4x4<Real> res;
@@ -166,13 +162,13 @@ Matrix4x4<Real>::LookAt(const Vector3<Real>& eye, const Vector3<Real>& target, c
 	res.m22 = up.y;
 	res.m32 = up.z;
 	
-	res.m13 = forward.x;
-	res.m23 = forward.y;
-	res.m33 = forward.z;
+	res.m13 = -forward.x;
+	res.m23 = -forward.y;
+	res.m33 = -forward.z;
 	
 	res.tx = -Vector3<Real>::DotProduct(right, eye);
 	res.ty = -Vector3<Real>::DotProduct(up, eye);
-	res.tz = -Vector3<Real>::DotProduct(forward, eye);
+	res.tz =  Vector3<Real>::DotProduct(forward, eye);
 	
 	return res;
 }
@@ -541,7 +537,7 @@ inline
 const bool
 Matrix4x4<Real>::operator==(const Matrix4x4<Real> &m) const
 {
-	return row1 == m.row1 && row2 == m.row2 && row3 == m.row3 && row4 == m.row4;
+	return Row1() == Row1() && Row2() == m.Row2() && Row3() == m.Row3() && Row4() == m.Row4();
 }
 
 // --------------------------------------------------------------------------
@@ -555,7 +551,7 @@ inline
 const bool
 Matrix4x4<Real>::operator!=(const Matrix4x4<Real> &m) const
 {
-	return row1 != m.row1 || row2 != m.row2 || row3 != m.row3 || row4 != m.row4;
+	return Row1() != m.Row1() || Row2() != m.Row2() || Row3() != m.Row3() || Row4() != m.Row4();
 }
 
 template <typename Real>
@@ -665,7 +661,9 @@ inline
 void
 Matrix4x4<Real>::Translate (const Vector3<Real>& position)
 {
-	translation = position;
+	tx = position.x;
+	ty = position.y;
+	tz = position.z;
 }
 
 // --------------------------------------------------------------------------
@@ -823,22 +821,26 @@ operator* (const Matrix4x4<Real>& m1, const Matrix4x4<Real>& m2)
 	Matrix4x4<Real> res;
 	
 	// Compute the left 4x3 (linear transformation) portion
-	res.m11 = (m1.m11 * m2.m11) + (m1.m12 * m2.m21) + (m1.m13 * m2.m31);
-	res.m12 = (m1.m11 * m2.m12) + (m1.m12 * m2.m22) + (m1.m13 * m2.m32);
-	res.m13 = (m1.m11 * m2.m13) + (m1.m12 * m2.m23) + (m1.m13 * m2.m33);
+	res.m11 = (m1.m11 * m2.m11) + (m1.m21 * m2.m12) + (m1.m31 * m2.m13) + (m1.tx * m2.h14);
+	res.m12 = (m1.m12 * m2.m11) + (m1.m22 * m2.m12) + (m1.m32 * m2.m13) + (m1.ty * m2.h14);
+	res.m13 = (m1.m13 * m2.m11) + (m1.m23 * m2.m12) + (m1.m33 * m2.m13) + (m1.tz * m2.h14);
+	res.h14 = (m1.h14 * m2.m11) + (m1.h24 * m2.m12) + (m1.h34 * m2.m13) + (m1.tw * m2.h14);
 	
-	res.m21 = (m1.m21 * m2.m11) + (m1.m22 * m2.m21) + (m1.m23 * m2.m31);
-	res.m22 = (m1.m21 * m2.m12) + (m1.m22 * m2.m22) + (m1.m23 * m2.m32);
-	res.m23 = (m1.m21 * m2.m13) + (m1.m22 * m2.m23) + (m1.m23 * m2.m33);
+	res.m21 = (m1.m11 * m2.m21) + (m1.m21 * m2.m22) + (m1.m31 * m2.m23) + (m1.tx * m2.h24);
+	res.m22 = (m1.m12 * m2.m21) + (m1.m22 * m2.m22) + (m1.m32 * m2.m23) + (m1.ty * m2.h24);
+	res.m23 = (m1.m13 * m2.m21) + (m1.m23 * m2.m22) + (m1.m33 * m2.m23) + (m1.tz * m2.h24);
+	res.h24 = (m1.h14 * m2.m21) + (m1.h24 * m2.m22) + (m1.h34 * m2.m23) + (m1.tw * m2.h24);
 	
-	res.m31 = (m1.m31 * m2.m11) + (m1.m32 * m2.m21) + (m1.m33 * m2.m31);
-	res.m32 = (m1.m31 * m2.m12) + (m1.m32 * m2.m22) + (m1.m33 * m2.m32);
-	res.m33 = (m1.m31 * m2.m13) + (m1.m32 * m2.m23) + (m1.m33 * m2.m33);
+	res.m31 = (m1.m11 * m2.m31) + (m1.m21 * m2.m32) + (m1.m31 * m2.m33) + (m1.tx * m2.h34);
+	res.m32 = (m1.m12 * m2.m31) + (m1.m22 * m2.m32) + (m1.m32 * m2.m33) + (m1.ty * m2.h34);
+	res.m33 = (m1.m13 * m2.m31) + (m1.m23 * m2.m32) + (m1.m33 * m2.m33) + (m1.tz * m2.h34);
+	res.h34 = (m1.h14 * m2.m31) + (m1.h24 * m2.m32) + (m1.h34 * m2.m33) + (m1.tw * m2.h34);
 	
 	// Compute the translation portion
-	res.tx = (m1.tx * m2.m11) + (m1.ty * m2.m21) + (m1.tz * m2.m31) + m2.tx;
-	res.ty = (m1.tx * m2.m12) + (m1.ty * m2.m22) + (m1.tz * m2.m32) + m2.ty;
-	res.tz = (m1.tx * m2.m13) + (m1.ty * m2.m23) + (m1.tz * m2.m33) + m2.tz;
+	res.tx = (m1.m11 * m2.tx) + (m1.m21 * m2.ty) + (m1.m31 * m2.tz) + (m1.tx * m2.tw);
+	res.ty = (m1.m12 * m2.tx) + (m1.m22 * m2.ty) + (m1.m32 * m2.tz) + (m1.ty * m2.tw);
+	res.tz = (m1.m13 * m2.tx) + (m1.m23 * m2.ty) + (m1.m33 * m2.tz) + (m1.tz * m2.tw);
+	res.tw = (m1.h14 * m2.tx) + (m1.h24 * m2.ty) + (m1.h34 * m2.tz) + (m1.tw * m2.tw);
 	
 	return res;
 }

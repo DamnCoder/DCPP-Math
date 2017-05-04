@@ -127,20 +127,28 @@ namespace math
 		// Getter & Setter
 		// ===========================================================
 	public:
-		const Vector3<Real>&	Up() const			{ return up; }
-		const Vector3<Real>&	Forward() const		{ return forward; }
-		const Vector3<Real>&	Right()	const		{ return right; }
-		const Vector3<Real>&	Translation() const	{ return translation; }
+		// Basis vectors from matrix
+		const Vector3<Real>	Right()			const	{ return Vector3<Real>(m11, m12, m13); }
+		const Vector3<Real>	Up()			const	{ return Vector3<Real>(m21, m22, m23); }
+		const Vector3<Real>	Forward()		const	{ return Vector3<Real>(m31, m32, m33); }
 		
-		void					FromQuaternion (const Quaternion<Real> &q);
-		Quaternion<Real>		ToQuaternion() const;
+		Vector3<Real>		Translation()			{ return Vector3<Real>(tx, ty, tz); }
+		const Vector3<Real>	Translation()	const	{ return Vector3<Real>(tx, ty, tz); }
 		
-		void					FromEulerAngles (const Vector3<Real>& rotation);
-		void					FromEulerAngles (Real x, Real y, Real z);
-		Vector3<Real>			EulerAngles () const;
+		const Vector4<Real>	Row1()			const	{ return Vector4<Real>(m11, m12, m13, h14); }
+		const Vector4<Real>	Row2()			const	{ return Vector4<Real>(m21, m22, m23, h24); }
+		const Vector4<Real>	Row3()			const	{ return Vector4<Real>(m31, m32, m33, h34); }
+		const Vector4<Real>	Row4()			const	{ return Vector4<Real>(tx, ty, tz, tw); }
+
+		void				FromQuaternion (const Quaternion<Real> &q);
+		Quaternion<Real>	ToQuaternion() const;
 		
-		const bool				IsSingular() const;
-		const Real				Determinant3x3() const;
+		void				FromEulerAngles (const Vector3<Real>& rotation);
+		void				FromEulerAngles (Real x, Real y, Real z);
+		Vector3<Real>		EulerAngles () const;
+		
+		const bool			IsSingular() const;
+		const Real			Determinant3x3() const;
 		
 		// ===========================================================
 		// Constructors
@@ -149,24 +157,7 @@ namespace math
 		// Constructor - Initialize the last (never used) row of the matrix
 		// so that we can do any operation on matrices on the 3x4 portion
 		// and forget that line which will (and should) never change.
-		Matrix4x4 (): h1(0), h2(0), h3(0), w(1)
-        {}
-        
-        Matrix4x4 (const Vector4<Real>& row1,
-                   const Vector4<Real>& row2,
-                   const Vector4<Real>& row3,
-                   const Vector4<Real>& row4):
-            row1(row1),
-            row2(row2),
-            row3(row3),
-            row4(row4)
-        {}
-        
-        Matrix4x4 (const Matrix4x4<Real>& copy):
-            row1(copy.row1),
-            row2(copy.row2),
-            row3(copy.row3),
-            row4(copy.row4)
+		Matrix4x4 (): h14(0), h24(0), h34(0), tw(1)
         {}
 
 		// ===========================================================
@@ -207,13 +198,15 @@ namespace math
 		// like an array of Real. For example:
 		// Matrix4x4<float> mat;
 		// float f = mat[4]; // access to m21
-		operator const Real *() { return m; }
+		operator const Real *()			{ return m; }
+		operator const Real *() const	{ return m; }
 
 		// ===========================================================
 		// Fields
 		// ===========================================================
 	public:
 		// Member variables
+		
 		
 		// The values of the matrix.  Basically the upper 3x3 portion
 		// contains a linear transformation, and the last column is the
@@ -227,23 +220,6 @@ namespace math
 				Real m21, m22, m23, h24;
 				Real m31, m32, m33, h34;
 				Real tx,  ty,  tz,  tw;
-			};
-			
-			// Basis vectors from matrix
-			struct
-            {
-				Vector3<Real> right;        float h1;
-				Vector3<Real> up;           float h2;
-				Vector3<Real> forward;      float h3;
-				Vector3<Real> translation;  float w;
-			};
-			
-			struct
-			{
-				Vector4<Real> row1;
-				Vector4<Real> row2;
-				Vector4<Real> row3;
-				Vector4<Real> row4;
 			};
 			
 			// Access to raw packed matrix data (usefull for
