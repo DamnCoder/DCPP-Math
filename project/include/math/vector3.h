@@ -26,7 +26,7 @@ namespace math
 	template <typename Real>
 	class Vector3
 	{
-    // Static operations for class methods
+		// Basic Vector3 creation ops
     public:
         static const Vector3<Real> Zero();
         static const Vector3<Real> One();
@@ -39,20 +39,28 @@ namespace math
         
         static const Vector3<Real> Forward();
         static const Vector3<Real> Backward();
+		
+		// Basic Vector3 Colors
+	public:
+		static Vector3<Real> Red()		{ return Vector3<Real>(1.0, 0.0, 0.0); }
+		static Vector3<Real> Green()	{ return Vector3<Real>(0.0, 1.0, 0.0); }
+		static Vector3<Real> Blue()		{ return Vector3<Real>(0.0, 0.0, 1.0); }
+		static Vector3<Real> White()	{ return Vector3<Real>(1.0, 1.0, 1.0); }
+		static Vector3<Real> Black()	{ return Vector3<Real>(0.0, 0.0, 0.0); }
+		
+        static const Vector3<Real>	PositiveEulerAngles(const Vector3<Real>& euler);
         
-        static const Vector3<Real> PositiveEulerAngles(const Vector3<Real>& euler);
+        static Vector3<Real>		FromPolarAngles(Real azimuth, Real zenith);
+        static Vector3<Real>		UnitVectorFromOrientation(Real degrees);
         
-        static Vector3<Real> FromPolarAngles(Real azimuth, Real zenith);
-        static Vector3<Real> UnitVectorFromOrientation(Real degrees);
+        static Real					DotProduct (const Vector3<Real>& a, const Vector3<Real>& b);
+        static Vector3<Real>		CrossProduct (const Vector3<Real>& a, const Vector3<Real>& b);
+        static Vector3<Real>		ComputeNormal (const Vector3<Real>& p1, const Vector3<Real>& p2, const Vector3<Real>& p3);
         
-        static Real				DotProduct (const Vector3<Real>& a, const Vector3<Real>& b);
-        static Vector3<Real>	CrossProduct (const Vector3<Real>& a, const Vector3<Real>& b);
-        static Vector3<Real>	ComputeNormal (const Vector3<Real>& p1, const Vector3<Real>& p2, const Vector3<Real>& p3);
+        static Real					Distance (const Vector3<Real>& from, const Vector3<Real>& to);
+        static Real					DistanceSquared (const Vector3<Real>& from, const Vector3<Real>& to);
         
-        static Real Distance (const Vector3<Real>& from, const Vector3<Real>& to);
-        static Real DistanceSquared (const Vector3<Real>& from, const Vector3<Real>& to);
-        
-        static Vector3<Real> Lerp(const Vector3<Real>& from, const Vector3<Real>& to, const Real perc);
+        static Vector3<Real>		Lerp(const Vector3<Real>& from, const Vector3<Real>& to, const Real perc);
         
     // Getters / Setters
     public:

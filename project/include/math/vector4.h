@@ -28,6 +28,13 @@ namespace math
     template <typename Real>
     class Vector4
     {
+	public:
+		static Vector4<Real> Red()		{ return Vector4<Real>(1.0, 0.0, 0.0, 1.0); }
+		static Vector4<Real> Green()	{ return Vector4<Real>(0.0, 1.0, 0.0, 1.0); }
+		static Vector4<Real> Blue()		{ return Vector4<Real>(0.0, 0.0, 1.0, 1.0); }
+		static Vector4<Real> White()	{ return Vector4<Real>(1.0, 1.0, 1.0, 1.0); }
+		static Vector4<Real> Black()	{ return Vector4<Real>(0.0, 0.0, 0.0, 1.0); }
+		
     public:
         Vector4() : x (0), y (0), z(0), w(0) {}
         Vector4(Real x, Real y, Real z, Real w)
