@@ -154,16 +154,23 @@ namespace math
 		// Constructors
 		// ===========================================================
 	public:
-		// Constructor - Initialize the last (never used) row of the matrix
-		// so that we can do any operation on matrices on the 3x4 portion
-		// and forget that line which will (and should) never change.
-		Matrix4x4 (): h14(0), h24(0), h34(0), tw(1)
+		
+		Matrix4x4(): h14(0), h24(0), h34(0), tw(1)
         {}
+		
+		Matrix4x4(const Matrix4x4& copy):
+			m11(copy.m11), m12(copy.m12), m13(copy.m13), h14(copy.h14),
+			m21(copy.m21), m22(copy.m22), m23(copy.m23), h24(copy.h24),
+			m31(copy.m31), m32(copy.m32), m33(copy.m33), h34(copy.h34),
+			tx(copy.tx), ty(copy.ty), tz(copy.tz), tw(copy.tw)
+		{}
 
 		// ===========================================================
 		// Methods for/from SuperClass/Interfaces
 		// ===========================================================
 	public:
+		void				operator= (const Matrix4x4<Real>& m);
+		
         // Matrix comparison
         const bool			operator==(const Matrix4x4<Real>& m) const;
         const bool			operator!=(const Matrix4x4<Real>& m) const;
@@ -185,7 +192,7 @@ namespace math
 		void			Translate	(const Vector3<Real>& position);
 		void			Rotate		(const Vector3<Real>& rotation);
 		void			Rotate		(const Vector3<Real>& axis, const Real theta);
-		void			Scale		(const Vector3<Real>& s);
+		void			Scale		(const Vector3<Real>& scale);
 		
 		Vector3<Real>	TransformPosition			(const Vector3<Real>& position) const;
 		Vector3<Real>	InverseTransformPosition	(const Vector3<Real>& position) const;
@@ -234,6 +241,13 @@ namespace math
 	typedef Matrix4x4<float>    Matrix4x4f;
 	typedef Matrix4x4<double>   Matrix4x4d;
 
+	inline void PrintMatrix(const math::Matrix4x4f& matrix)
+	{
+		printf("%f %f %f %f\n", matrix[0], matrix[1], matrix[2], matrix[3]);
+		printf("%f %f %f %f\n", matrix[4], matrix[5], matrix[6], matrix[7]);
+		printf("%f %f %f %f\n", matrix[8], matrix[9], matrix[10], matrix[11]);
+		printf("%f %f %f %f\n", matrix[12], matrix[13], matrix[14], matrix[15]);
+	}
 	
 	// Nonmember Matrix4x4 functions
     
@@ -250,6 +264,16 @@ namespace math
 	// ===========================================================
 	// Template/Inline implementation
 	// ===========================================================
+	template <typename Real>
+	inline
+	void Matrix4x4<Real>::operator= (const Matrix4x4<Real>& copy)
+	{
+		for(int i=0; i<16; ++i)
+		{
+			m[i] = copy.m[i];
+		}
+	}
+	
 	#include "matrix.inl"
 }
 }

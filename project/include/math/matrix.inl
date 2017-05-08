@@ -108,6 +108,7 @@ Matrix4x4<Real>::Perspective (Real fovY, Real aspect, Real near, Real far)
 	Matrix4x4<Real> res;
 	
 	Real tan = std::tan (DegToRad(fovY * 0.5));
+	Real oneOverFNDist = 1.0 / (far - near);
 	
 	res.m[0] = 1.0 / (tan * aspect);
 	res.m[1] = 0.0;
@@ -121,12 +122,12 @@ Matrix4x4<Real>::Perspective (Real fovY, Real aspect, Real near, Real far)
 	
 	res.m[8] = 0.0;
 	res.m[9] = 0.0;
-	res.m[10]= -(far + near) / (far - near);
+	res.m[10]= -(far + near) * oneOverFNDist;
 	res.m[11]= -1.0;
 	
 	res.m[12]= 0.0;
 	res.m[13]= 0.0;
-	res.m[14]= -(2 * far * near) / (far - near);
+	res.m[14]= -(2 * far * near) * oneOverFNDist;
 	res.m[15]= 0.0;
 	
 	return res;
@@ -525,6 +526,8 @@ Matrix4x4<Real>::Determinant3x3 () const
 	+
 	m13 * ((m21 * m32) - (m22 * m31));
 }
+
+
 
 // --------------------------------------------------------------------------
 // operator ==
