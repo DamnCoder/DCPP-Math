@@ -8,10 +8,12 @@
 //  Modified by Jorge López González on 14/07/12.
 //
 
-#ifndef bitthemall_vector_h
-#define bitthemall_vector_h
+#ifndef VECTOR3_H
+#define VECTOR3_H
 
 #include "dcmath.h"
+
+#include <stdio.h>
 
 namespace dc
 {
@@ -22,26 +24,25 @@ namespace math
 	// class Vector3<Real> - A simple 3D vector class.
 	//
 	//////////////////////////////////////////////////
-    
+
 	template <typename Real>
 	class Vector3
 	{
-		// Basic Vector3 creation ops
     public:
-        static const Vector3<Real> Zero();
-        static const Vector3<Real> One();
-        
-        static const Vector3<Real> Up();
-        static const Vector3<Real> Down();
-        
-        static const Vector3<Real> Left();
-        static const Vector3<Real> Right();
-        
-        static const Vector3<Real> Forward();
-        static const Vector3<Real> Backward();
+		// Basic Vector3 creation ops
+		static const Vector3<Real> Zero()	{ return Vector3<Real>(); }
+		static const Vector3<Real> One()	{ return Vector3<Real>(1, 1, 1); }
+			
+		static const Vector3<Real> Up()		{ return Vector3<Real>(0, 1, 0); }
+		static const Vector3<Real> Down()	{ return Vector3<Real>(0, -1, 0); }
+		
+		static const Vector3<Real> Right()	{ return Vector3<Real>(1, 0, 0); }
+		static const Vector3<Real> Left()	{ return Vector3<Real>(-1, 0, 0); }
+		
+		static const Vector3<Real> Back()	{ return Vector3<Real>(0, 0, 1); }
+        static const Vector3<Real> Front()	{ return Vector3<Real>(0, 0, -1); }
 		
 		// Basic Vector3 Colors
-	public:
 		static Vector3<Real> Red()		{ return Vector3<Real>(1.0, 0.0, 0.0); }
 		static Vector3<Real> Green()	{ return Vector3<Real>(0.0, 1.0, 0.0); }
 		static Vector3<Real> Blue()		{ return Vector3<Real>(0.0, 0.0, 1.0); }
@@ -144,7 +145,7 @@ namespace math
             Real vec[3];
         };
 	};
-
+	
     // Predefined Vector3 types
 	typedef Vector3<float> Vector3f;
 	typedef Vector3<float> Position3f;
@@ -157,7 +158,12 @@ namespace math
 	//
 	// Nonmember Vector3 functions
 	//
-    
+	
+	inline void PrintVector(const math::Vector3f& v)
+	{
+		printf("(%f, %f, %f)\n", v.x, v.y, v.z);
+	}
+	
 	template <typename Real>
 	Vector3<Real>
     operator* (const Real k, const Vector3<Real>& v);

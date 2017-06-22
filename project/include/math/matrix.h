@@ -11,11 +11,11 @@
 #ifndef bitthemall_matrix_h
 #define bitthemall_matrix_h
 
-#include <iostream>
-
 #include "vector3.h"
 #include "vector4.h"
 #include "quaternion.h"
+
+#include <string.h>
 
 namespace dc
 {
@@ -109,6 +109,7 @@ namespace math
 		// ===========================================================
 	public:
 		// Matrix-builder functions
+		static Matrix4x4<Real> Create		(const Vector3<Real>& position, const Quaternion<Real>& rotation, const Vector3<Real>& scale);
 		static Matrix4x4<Real> Frustum		(Real left, Real right, Real bottom, Real top, Real near, Real far);
 		
 		static Matrix4x4<Real> Orthographic	(Real left, Real right, Real bottom, Real top, Real near, Real far);
@@ -132,22 +133,18 @@ namespace math
 		const Vector3<Real>	Up()			const	{ return Vector3<Real>(m21, m22, m23); }
 		const Vector3<Real>	Forward()		const	{ return Vector3<Real>(m31, m32, m33); }
 		
-		Vector3<Real>		Translation()			{ return Vector3<Real>(tx, ty, tz); }
-		const Vector3<Real>	Translation()	const	{ return Vector3<Real>(tx, ty, tz); }
-		
 		const Vector4<Real>	Row1()			const	{ return Vector4<Real>(m11, m12, m13, h14); }
 		const Vector4<Real>	Row2()			const	{ return Vector4<Real>(m21, m22, m23, h24); }
 		const Vector4<Real>	Row3()			const	{ return Vector4<Real>(m31, m32, m33, h34); }
 		const Vector4<Real>	Row4()			const	{ return Vector4<Real>(tx, ty, tz, tw); }
 
-		void				FromQuaternion (const Quaternion<Real> &q);
-		Quaternion<Real>	ToQuaternion() const;
+		Vector3<Real>		Position()		const	{ return Vector3<Real>(tx, ty, tz); }
+		Vector3<Real>		Scale()			const	{ return Vector3<Real>(m11, m22, m33); }
+		Quaternion<Real>	Rotation()		const;
 		
-		void				FromEulerAngles (const Vector3<Real>& rotation);
-		void				FromEulerAngles (Real x, Real y, Real z);
-		Vector3<Real>		EulerAngles () const;
+		Vector3<Real>		EulerAngles ()	const;
 		
-		const bool			IsSingular() const;
+		const bool			IsSingular()	const;
 		const Real			Determinant3x3() const;
 		
 		// ===========================================================
@@ -158,12 +155,11 @@ namespace math
 		Matrix4x4(): h14(0), h24(0), h34(0), tw(1)
         {}
 		
-		Matrix4x4(const Matrix4x4& copy):
-			m11(copy.m11), m12(copy.m12), m13(copy.m13), h14(copy.h14),
-			m21(copy.m21), m22(copy.m22), m23(copy.m23), h24(copy.h24),
-			m31(copy.m31), m32(copy.m32), m33(copy.m33), h34(copy.h34),
-			tx(copy.tx), ty(copy.ty), tz(copy.tz), tw(copy.tw)
-		{}
+		Matrix4x4(const Matrix4x4& copy)
+		{
+			memcpy(&m, copy.m, 16 * sizeof(Real));
+			//PrintMatrix(*this);
+		}
 
 		// ===========================================================
 		// Methods for/from SuperClass/Interfaces
@@ -186,12 +182,17 @@ namespace math
 		// Methods
 		// ===========================================================
 	public:
+		void			Set(const Vector3<Real>& position, const Quaternion<Real>& rotation, const Vector3<Real>& scale);
 		void			Identify();
 		void			Transpose();
 		
 		void			Translate	(const Vector3<Real>& position);
-		void			Rotate		(const Vector3<Real>& rotation);
-		void			Rotate		(const Vector3<Real>& axis, const Real theta);
+		
+		void			Rotation	(const Vector3<Real>& rotation);
+		void			Rotation	(const Real x, const Real y, const Real z);
+		void			Rotation	(const Vector3<Real>& axis, const Real theta);
+		void			Rotation	(const Quaternion<Real> &q);
+		
 		void			Scale		(const Vector3<Real>& scale);
 		
 		Vector3<Real>	TransformPosition			(const Vector3<Real>& position) const;
@@ -229,8 +230,7 @@ namespace math
 				Real tx,  ty,  tz,  tw;
 			};
 			
-			// Access to raw packed matrix data (usefull for
-			// glLoadMatrixf () and glMultMatrixf ())
+			// Access to raw packed matrix data
 			Real m[16];
 		};
 	};
@@ -257,9 +257,6 @@ namespace math
     
     template <typename Real>
 	Matrix4x4<Real> operator*= (const Matrix4x4<Real>& m1, const Matrix4x4<Real>& m2);
-    
-    template <typename Real>
-    std::ostream& operator << (std::ostream& output, const Matrix4x4<Real>& m);
 	
 	// ===========================================================
 	// Template/Inline implementation
@@ -268,12 +265,72 @@ namespace math
 	inline
 	void Matrix4x4<Real>::operator= (const Matrix4x4<Real>& copy)
 	{
-		for(int i=0; i<16; ++i)
-		{
-			m[i] = copy.m[i];
-		}
+		memcpy(&m, copy.m, 16 * sizeof(Real));
+		//PrintMatrix(*this);
 	}
 	
+	template <typename Real>
+	inline
+	void Matrix4x4<Real>::Set(const Vector3<Real>& position, const Quaternion<Real>& rotation, const Vector3<Real>& scale)
+	{
+		const float xs = rotation.x * 2.f,	ys = rotation.y * 2.f,	zs = rotation.z * 2.f;
+		const float wx = rotation.w * xs,	wy = rotation.w * ys,	wz = rotation.w * zs;
+		const float xx = rotation.x * xs,	xy = rotation.x * ys,	xz = rotation.x * zs;
+		const float yy = rotation.y * ys,	yz = rotation.y * zs,	zz = rotation.z * zs;
+		
+		m11 = scale.x * (1.f - (yy + zz));
+		m21 = scale.y * (xy - wz);
+		m31 = scale.z * (xz + wy);
+		tx = position.x;
+		
+		m12 = scale.x * (xy + wz);
+		m22 = scale.y * (1.f - (xx + zz));
+		m32 = scale.z * (yz - wx);
+		ty = position.y;
+		
+		m13 = scale.x * (xz - wy);
+		m23 = scale.y * (yz + wx);
+		m33 = scale.z * (1.f - (xx + yy));
+		tz = position.z;
+		
+		h14 = 0.f;
+		h24 = 0.f;
+		h34 = 0.f;
+		tw = 1.f;
+	}
+	
+	template <typename Real>
+	inline
+	Matrix4x4<Real> Matrix4x4<Real>::Create(const Vector3<Real>& position, const Quaternion<Real>& rotation, const Vector3<Real>& scale)
+	{
+		Matrix4x4<Real> m;
+		const float xs = rotation.x * 2.f,	ys = rotation.y * 2.f,	zs = rotation.z * 2.f;
+		const float wx = rotation.w * xs,	wy = rotation.w * ys,	wz = rotation.w * zs;
+		const float xx = rotation.x * xs,	xy = rotation.x * ys,	xz = rotation.x * zs;
+		const float yy = rotation.y * ys,	yz = rotation.y * zs,	zz = rotation.z * zs;
+		
+		m.m11 = scale.x * (1.f - (yy + zz));
+		m.m21 = scale.y * (xy - wz);
+		m.m31 = scale.z * (xz + wy);
+		m.tx = position.x;
+		
+		m.m12 = scale.x * (xy + wz);
+		m.m22 = scale.y * (1.f - (xx + zz));
+		m.m32 = scale.z * (yz - wx);
+		m.ty = position.y;
+		
+		m.m13 = scale.x * (xz - wy);
+		m.m23 = scale.y * (yz + wx);
+		m.m33 = scale.z * (1.f - (xx + yy));
+		m.tz = position.z;
+		
+		m.h14 = 0.f;
+		m.h24 = 0.f;
+		m.h34 = 0.f;
+		m.tw = 1.f;
+		
+		return m;
+	}
 	#include "matrix.inl"
 }
 }

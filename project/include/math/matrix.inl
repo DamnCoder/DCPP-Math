@@ -241,180 +241,12 @@ Matrix4x4<Real>::Identity()
 // class Matrix4x4<Real> member functions implementation.
 //
 /////////////////////////////////////////////////////////////////////////////
-// --------------------------------------------------------------------------
-// FromQuaternion
-//
-// Convert a quaternion to a matrix.
-// --------------------------------------------------------------------------
-
-template <typename Real>
-inline void
-Matrix4x4<Real>::FromQuaternion (const Quaternion<Real> &q)
-{
-	// Compute a few values to optimize common subexpressions
-	Real ww = 2.0 * q.w;
-	Real xx = 2.0 * q.x;
-	Real yy = 2.0 * q.y;
-	Real zz = 2.0 * q.z;
-	
-	// Set the matrix elements.  There is still a little more
-	// opportunity for optimization due to the many common
-	// subexpressions.  We'll let the compiler handle that...
-	m11 = 1.0 - (yy * q.y) - (zz * q.z);
-	m12 = (xx * q.y) + (ww * q.z);
-	m13 = (xx * q.z) - (ww * q.y);
-	
-	m21 = (xx * q.y) - (ww * q.z);
-	m22 = 1.0 - (xx * q.x) - (zz * q.z);
-	m23 = (yy * q.z) + (ww * q.x);
-	
-	m31 = (xx * q.z) + (ww * q.y);
-	m32 = (yy * q.z) - (ww * q.x);
-	m33 = 1.0 - (xx * q.x) - (yy * q.y);
-	
-	// Reset the translation portion
-	tx = ty = tz = 0.0;
-}
 
 template <typename Real>
 inline
-Quaternion<Real> Matrix4x4<Real>::ToQuaternion() const
+Quaternion<Real> Matrix4x4<Real>::Rotation() const
 {
 	return Quaternion<Real>(*this);
-	/*
-	 Real q0 = ( m11 + m22 + m33 + 1.0) / 4.0;
-	 Real q1 = ( m11 - m22 - m33 + 1.0) / 4.0;
-	 Real q2 = (-m11 + m22 - m33 + 1.0) / 4.0;
-	 Real q3 = (-m11 - m22 + m33 + 1.0) / 4.0;
-	 
-	 if(q0 < 0.0) q0 = 0.0;
-	 if(q1 < 0.0) q1 = 0.0;
-	 if(q2 < 0.0) q2 = 0.0;
-	 if(q3 < 0.0) q3 = 0.0;
-	 
-	 q0 = sqrt(q0);
-	 q1 = sqrt(q1);
-	 q2 = sqrt(q2);
-	 q3 = sqrt(q3);
-	 
-	 if(q0 >= q1 && q0 >= q2 && q0 >= q3)
-	 {
-	 q0 *= +1.0f;
-	 q1 *= Sign(m32 - m23);
-	 q2 *= Sign(m13 - m31);
-	 q3 *= Sign(m21 - m12);
-	 }
-	 else if(q1 >= q0 && q1 >= q2 && q1 >= q3)
-	 {
-	 q0 *= Sign(m32 - m23);
-	 q1 *= +1.0f;
-	 q2 *= Sign(m21 + m12);
-	 q3 *= Sign(m13 + m31);
-	 }
-	 else if(q2 >= q0 && q2 >= q1 && q2 >= q3)
-	 {
-	 q0 *= Sign(m13 - m31);
-	 q1 *= Sign(m21 + m12);
-	 q2 *= +1.0f;
-	 q3 *= Sign(m32 + m23);
-	 }
-	 else if(q3 >= q0 && q3 >= q1 && q3 >= q2)
-	 {
-	 q0 *= Sign(m21 - m12);
-	 q1 *= Sign(m31 + m13);
-	 q2 *= Sign(m32 + m23);
-	 q3 *= +1.0f;
-	 }
-	 
-	 Real length = Normal(q0, q1, q2, q3);
-	 
-	 return Quaternion<Real>(q0/length, q1/length, q2/length, q3/length);
-	 */
-	
-	// Algorithm in Ken Shoemake's article in 1987 SIGGRAPH course notes
-	// article "Quaternion Calculus and Fast Animation".
-	
-}
-
-// --------------------------------------------------------------------------
-// FromEulerAngles
-//
-// Setup a rotation matrix, given three X-Y-Z rotation angles. The
-// rotations are performed first on x-axis, then y-axis and finaly z-axis.
-// --------------------------------------------------------------------------
-
-template <typename Real>
-inline void
-Matrix4x4<Real>::FromEulerAngles (const Vector3<Real>& rotation)
-{
-	FromEulerAngles(rotation.x, rotation.y, rotation.z);
-}
-
-template <typename Real>
-inline void
-Matrix4x4<Real>::FromEulerAngles (Real x, Real y, Real z)
-{
-	/*
-	 // Fetch sine and cosine of angles
-	 const Real cr = std::cos (x);
-	 const Real sr = std::sin (x);
-	 
-	 const Real cp = std::cos (y);
-	 const Real sp = std::sin (y);
-	 
-	 const Real cy = std::cos (z);
-	 const Real sy = std::sin (z);
-	 
-	 const Real srsp = sr * sp;
-	 const Real crsp = cr * sp;
-	 
-	 // Fill in the matrix elements
-	 m11 =  (cp * cy);   m12 =  (srsp * cy) - (cr * sy); m13 =  (crsp * cy) + (sr * sy);
-	 m21 =  (cp * sy);   m22 =  (srsp * sy) + (cr * cy); m23 =  (crsp * sy) - (sr * cy);
-	 m31 = -(sp);        m32 =  (sr * cp);               m33 =  (cr * cp);
-	 //*/
-	
-	/*
-	 // Fetch sine and cosine of angles
-	 const Real cr = std::cos (x);
-	 const Real sr = std::sin (x);
-	 
-	 const Real cp = std::cos (y);
-	 const Real sp = std::sin (y);
-	 
-	 const Real cy = std::cos (z);
-	 const Real sy = std::sin (z);
-	 
-	 const Real srsp = sr * sp;
-	 const Real crsp = cr * sp;
-	 
-	 // Fill in the matrix elements
-	 m11 =  (cp * cy);   m12 =  (srsp * cy) + (cr * sy); m13 = -(crsp * cy) + (sr * sy);
-	 m21 = -(cp * sy);   m22 = -(srsp * sy) + (cr * cy); m23 =  (crsp * sy) + (sr * cy);
-	 m31 =  (sp);        m32 = -(sr * cp);               m33 =  (cr * cp);
-	 //*/
-	//*
-	// Fetch sine and cosine of angles
-	// Bank
-	Real cb = std::cos (x);
-	Real sb = std::sin (x);
-	
-	// Heading
-	Real ch = std::cos (y);
-	Real sh = std::sin (y);
-	
-	// Attitude
-	Real ca = std::cos (z);
-	Real sa = std::sin (z);
-	
-	Real sacb = sa * cb;
-	Real sasb = sa * sb;
-	
-	// Fill in the matrix elements
-	m11 =  (ch * ca);   m12 = -(ch * sacb) + (sh * sb); m13 =  (ch * sasb) + (sh * cb);
-	m21 =  (sa);        m22 =  (ca * cb);               m23 = -(ca * sb);
-	m31 = -(sh * ca);   m32 = -(sh * sacb) + (ch * sb); m33 = -(sh * sasb) + (ch * cb);
-	//*/
 }
 
 // --------------------------------------------------------------------------
@@ -432,33 +264,13 @@ inline
 Vector3<Real>
 Matrix4x4<Real>::EulerAngles() const
 {
-	/*
-	 if (m.m10 > 0.998) { // singularity at north pole
-	 heading = Math.atan2(m.m02,m.m22);
-	 attitude = Math.PI/2;
-	 bank = 0;
-	 return;
-	 }
-	 if (m.m10 < -0.998) { // singularity at south pole
-	 heading = Math.atan2(m.m02,m.m22);
-	 attitude = -Math.PI/2;
-	 bank = 0;
-	 return;
-	 }
-	 
-	 bank = Math.atan2(-m.m12,m.m11);       // rotX
-	 heading = Math.atan2(-m.m20,m.m00);    // rotY
-	 attitude = Math.asin(m.m10);           // rotZ
-	 
-	 */
-	//*
 	float bank, heading, attitude;
 	
 	if(0.998 < m21)
 	{
 		bank  = 0;
 		heading = std::atan2( m13, m33);
-		attitude =  MO_PI_OVER_2;
+		attitude =  DC_PI_OVER_2;
 		return Vector3<Real>(bank, heading, attitude);
 	}
 	
@@ -466,7 +278,7 @@ Matrix4x4<Real>::EulerAngles() const
 	{
 		bank  = 0;
 		heading = std::atan2( m13, m33);
-		attitude =  -MO_PI_OVER_2;
+		attitude =  -DC_PI_OVER_2;
 		return Vector3<Real>(bank, heading, attitude);
 	}
 	
@@ -475,21 +287,6 @@ Matrix4x4<Real>::EulerAngles() const
 	attitude = std::asin ( m21);
 	
 	return Vector3<Real>(bank, heading, attitude);
-	//*/
-	/*
-	 // Compute Y-axis angle
-	 const Real y = std::asin (m31);
-	 
-	 // Compute cos and one over cos for optimization
-	 const Real cy = std::cos (y);
-	 const Real oneOverCosY = 1.0 / cy;
-	 
-	 // No gimball lock
-	 const Real x = std::atan2 (-m32 * oneOverCosY, m33 * oneOverCosY);
-	 const Real z = std::atan2 (-m21 * oneOverCosY, m11 * oneOverCosY);
-	 
-	 return Vector3<Real>(x, y, z);
-	 //*/
 }
 
 
@@ -670,23 +467,62 @@ Matrix4x4<Real>::Translate (const Vector3<Real>& position)
 }
 
 // --------------------------------------------------------------------------
-// Rotate
+// Rotation
 //
-// Build a rotation matrix given the axis and angle.
+// Build rotation part given a vector3 with euler angles
 // --------------------------------------------------------------------------
 
 template <typename Real>
 inline
 void
-Matrix4x4<Real>::Rotate(const Vector3<Real>& rotation)
+Matrix4x4<Real>::Rotation(const Vector3<Real>& rotation)
 {
-	FromEulerAngles(rotation.x, rotation.y, rotation.z);
+	Rotation(rotation.x, rotation.y, rotation.z);
 }
+
+// --------------------------------------------------------------------------
+// Rotation
+//
+// Setup a rotation matrix, given three X-Y-Z rotation angles. The
+// rotations are performed first on x-axis, then y-axis and finaly z-axis.
+// --------------------------------------------------------------------------
+
+template <typename Real>
+inline void
+Matrix4x4<Real>::Rotation (const Real x, const Real y, const Real z)
+{
+	// Fetch sine and cosine of angles
+	// Bank
+	Real cb = std::cos (x);
+	Real sb = std::sin (x);
+	
+	// Heading
+	Real ch = std::cos (y);
+	Real sh = std::sin (y);
+	
+	// Attitude
+	Real ca = std::cos (z);
+	Real sa = std::sin (z);
+	
+	Real sacb = sa * cb;
+	Real sasb = sa * sb;
+	
+	// Fill in the matrix elements
+	m11 =  (ch * ca);   m12 = -(ch * sacb) + (sh * sb); m13 =  (ch * sasb) + (sh * cb);
+	m21 =  (sa);        m22 =  (ca * cb);               m23 = -(ca * sb);
+	m31 = -(sh * ca);   m32 = -(sh * sacb) + (ch * sb); m33 = -(sh * sasb) + (ch * cb);
+}
+
+// --------------------------------------------------------------------------
+// Rotation
+//
+// Build rotation part from a given axis and angle.
+// --------------------------------------------------------------------------
 
 template <typename Real>
 inline
 void
-Matrix4x4<Real>::Rotate(const Vector3<Real>& axis, const Real theta)
+Matrix4x4<Real>::Rotation(const Vector3<Real>& axis, const Real theta)
 {
 	
 	// Quick sanity check to make sure they passed in a unit vector
@@ -717,9 +553,40 @@ Matrix4x4<Real>::Rotate(const Vector3<Real>& axis, const Real theta)
 	m31 = (az * axis.x) + (axis.y * s);
 	m32 = (az * axis.y) - (axis.x * s);
 	m33 = (az * axis.z) + c;
-	
-	return ;
 }
+
+// --------------------------------------------------------------------------
+// Rotation
+//
+// Build rotation part from a rotation expressed as a quaternion
+// --------------------------------------------------------------------------
+
+template <typename Real>
+inline void
+Matrix4x4<Real>::Rotation (const Quaternion<Real> &q)
+{
+	// Compute a few values to optimize common subexpressions
+	Real ww = 2.0 * q.w;
+	Real xx = 2.0 * q.x;
+	Real yy = 2.0 * q.y;
+	Real zz = 2.0 * q.z;
+	
+	// Set the matrix elements.  There is still a little more
+	// opportunity for optimization due to the many common
+	// subexpressions.  We'll let the compiler handle that...
+	m11 = 1.0 - (yy * q.y) - (zz * q.z);
+	m12 = (xx * q.y) + (ww * q.z);
+	m13 = (xx * q.z) - (ww * q.y);
+	
+	m21 = (xx * q.y) - (ww * q.z);
+	m22 = 1.0 - (xx * q.x) - (zz * q.z);
+	m23 = (yy * q.z) + (ww * q.x);
+	
+	m31 = (xx * q.z) + (ww * q.y);
+	m32 = (yy * q.z) - (ww * q.x);
+	m33 = 1.0 - (xx * q.x) - (yy * q.y);
+}
+
 
 // --------------------------------------------------------------------------
 // Scale
@@ -854,21 +721,4 @@ operator*= (Matrix4x4<Real>& m1, const Matrix4x4<Real>& m2)
 {
 	m1 = m1 * m2;
 	return m1;
-}
-
-// --------------------------------------------------------------------------
-// ostream << Matrix4x4
-//
-// Standard output of a Matrix4x4.
-// --------------------------------------------------------------------------
-
-template <typename Real>
-inline std::ostream&
-operator<< (std::ostream& output, const Matrix4x4<Real>& m)
-{
-	output << m.row1 << "\n";
-	output << m.row2 << "\n";
-	output << m.row3 << "\n";
-	output << m.row4 << "\n";
-	return output;
 }

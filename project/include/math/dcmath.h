@@ -15,17 +15,17 @@ namespace dc
 {
 namespace math
 {
-    const double MO_EPSILON = 0.0001;
+    const double DC_EPSILON = 0.0001;
     
     // Declare a global constant for pi and a few multiples.
-    const double MO_PI = 3.14159265358979323846264338327950288;
-	const double MO_2PI = MO_PI * 2.0;
-	const double MO_PI_OVER_2 = MO_PI / 2.0;
-	const double MO_ONE_OVER_PI = 1.0 / MO_PI;
-	const double MO_ONE_OVER_2PI = 1.0 / MO_2PI;
-    const double MO_ONE_OVER_180 = 1.0 / 180.0;
-	const double MO_PI_OVER_180 = MO_PI / 180.0;	// Grados a radianes
-	const double MO_180_OVER_PI = 180.0 / MO_PI;	// Radianes a grados
+    const double DC_PI = 3.14159265358979323846264338327950288;
+	const double DC_PI2 = DC_PI * 2.0;
+	const double DC_PI_OVER_2 = DC_PI / 2.0;
+	const double DC_ONE_OVER_PI = 1.0 / DC_PI;
+	const double DC_ONE_OVER_2PI = 1.0 / DC_PI2;
+    const double DC_ONE_OVER_180 = 1.0 / 180.0;
+	const double DC_PI_OVER_180 = DC_PI / 180.0;	// Grados a radianes
+	const double DC_180_OVER_PI = 180.0 / DC_PI;	// Radianes a grados
     
     template <typename Real>
     inline
@@ -65,7 +65,7 @@ namespace math
     const Real 
     DegToRad (const Real deg) 
     { 
-        return deg * MO_PI_OVER_180;
+        return deg * DC_PI_OVER_180;
     }
     
     // Convert between radians and degrees
@@ -74,7 +74,7 @@ namespace math
     const Real 
     RadToDeg (const Real rad)
     { 
-        return rad * MO_180_OVER_PI;
+        return rad * DC_180_OVER_PI;
     }
 
     // Clamps a value between min and max
@@ -124,7 +124,7 @@ namespace math
     const bool
     Approximately(const Real a, const Real b)
     {
-        return Abs<Real>(a - b) < MO_EPSILON;
+        return Abs<Real>(a - b) < DC_EPSILON;
     }
     
     template<typename Real>
@@ -135,21 +135,21 @@ namespace math
         if (x < 0) return -1.0;
         return 0.0;
     }
-    
-    template<typename Real>
-    inline
-    const Real Normal(const Real a, const Real b, const Real c, const Real d)
-    {
-        return Sqrt(a * a + b * b + c * c + d * d);
-    }
-    
+	
     template<typename Real>
     inline
     const Real Sqrt(const Real value)
     {
         return std::sqrt(value);
     }
-    
+	
+	template<typename Real>
+	inline
+	const Real Normal(const Real a, const Real b, const Real c, const Real d)
+	{
+		return Sqrt(a * a + b * b + c * c + d * d);
+	}
+	
     inline
     const int
     Half(const int value)

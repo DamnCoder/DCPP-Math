@@ -33,6 +33,20 @@ namespace math
 	class Quaternion
 	{
 	public:
+		// Quaternion <-> Euler conversions; XYZ rotation order; angles in radians
+		static Quaternion<Real> FromEulerRad (const Real pitch, const Real yaw, const Real roll);
+		static Quaternion<Real> FromEulerRad (const Vector3<Real>& rotationRad);
+		static Vector3<Real>	EulerRad (const Quaternion<Real>& q);
+		
+	public:
+		const Real		GimbalPole() const;
+		const Real		YawRad() const;
+		const Real		PitchRad() const;
+		const Real		RollRad() const;
+		
+		const Real		RotationAngle () const;
+		Vector3<Real>	RotationAxis () const;
+		
 		// Getters / Setters
 		/*
 		 Accessor.  This allows to use the vector object
@@ -59,20 +73,7 @@ namespace math
         void Rotate (Vector3<Real>& v) const;
         
         void FromMatrix (const Matrix4x4<Real>& m);
-        
-        // Quaternion <-> Euler conversions; XYZ rotation order; angles in radians
-        static Quaternion<Real> FromEulerRad (const Real roll, const Real pitch, const Real yaw);
-        static Quaternion<Real> FromEulerRad (const Vector3<Real>& rotationRad);
-        static Vector3<Real> EulerRad (const Quaternion<Real>& q);
-        
-        const Real GimbalPole() const;
-        const Real YawRad() const;
-        const Real PitchRad() const;
-        const Real RollRad() const;
-        
-        Real RotationAngle () const;
-        Vector3<Real> RotationAxis () const;
-        
+
         // Quaternion comparison
         const bool operator== (const Quaternion<Real>& q) const;
         const bool operator!= (const Quaternion<Real>& q) const;
@@ -312,11 +313,11 @@ namespace math
             }
         }
         */
-        Real trace = m.m11 + m.m22 + m.m33 + 1.0;
+        const Real trace = m.m11 + m.m22 + m.m33 + 1.0;
         
-        if (trace > 0.0000)
+		if (trace > DC_EPSILON)
         {
-            Real s = 0.5 / std::sqrt (trace);
+            const Real s = 0.5 / std::sqrt (trace);
             w = 0.25 / s;
             x = (m.m23 - m.m32) * s;
             y = (m.m31 - m.m13) * s;
@@ -326,7 +327,7 @@ namespace math
         {
             if ((m.m11 > m.m22) && (m.m11 > m.m33))
             {
-                Real s = 0.5 / std::sqrt (1.0 + m.m11 - m.m22 - m.m33);
+                const Real s = 0.5 / std::sqrt (1.0 + m.m11 - m.m22 - m.m33);
                 x = 0.25 / s;
                 y = (m.m21 + m.m12) * s;
                 z = (m.m31 + m.m13) * s;
@@ -334,7 +335,7 @@ namespace math
             }
             else if (m.m22 > m.m33)
             {
-                Real s = 0.5 / std::sqrt (1.0 + m.m22 - m.m11 - m.m33);
+                const Real s = 0.5 / std::sqrt (1.0 + m.m22 - m.m11 - m.m33);
                 x = (m.m21 + m.m12) * s;
                 y = 0.25 / s;
                 z = (m.m32 + m.m23) * s;
@@ -342,7 +343,7 @@ namespace math
             }
             else
             {
-                Real s = 0.5 / std::sqrt (1.0 + m.m33 - m.m11 - m.m22);
+                const Real s = 0.5 / std::sqrt (1.0 + m.m33 - m.m11 - m.m22);
                 x = (m.m31 + m.m13) * s;
                 y = (m.m32 + m.m23) * s;
                 z = 0.25 / s;
@@ -358,9 +359,11 @@ namespace math
     // Setup the quaternion to perform an object->inertial rotation, given the
     // orientation in XYZ-Euler angles format.  x,y,z parameters must be in
     // radians.
-    // X-Axis -> Attitude - Roll
+	//
+	// X-Axis -> Bank - Pitch
     // Y-Axis -> Heading - Yaw
-    // Z-Axis -> Bank - Pitch
+    // Z-Axis -> Attitude - Roll
+	//
     // http://www.euclideanspace.com/maths/geometry/rotations/conversions/eulerToQuaternion/index.htm
     // http://www.euclideanspace.com/maths/geometry/rotations/conversions/eulerToQuaternion/steps/index.htm
     // --------------------------------------------------------------------------
@@ -368,25 +371,25 @@ namespace math
     template <typename Real>
     inline
     Quaternion<Real>
-    Quaternion<Real>::FromEulerRad (const Real roll, const Real yaw, const Real pitch)
+    Quaternion<Real>::FromEulerRad (const Real pitch, const Real yaw, const Real roll)
     {
         // Compute sine and cosine of the half angles
-        
-        // X-Axis -> Attitude - Roll
-        const Real hr = roll * 0.5;
-        const Real shr = Sin (hr);
-        const Real chr = Cos (hr);
-        
+		
+		// X-Axis -> Bank - Pitch
+		const Real hp = pitch * 0.5;
+		const Real shp = Sin (hp);
+		const Real chp = Cos (hp);
+		
         // Y-Axis -> Heading - Yaw
         const Real hy = yaw * 0.5f;
         const Real shy = Sin (hy);
         const Real chy = Cos (hy);
-        
-        // Z-Axis -> Bank - Pitch
-        const Real hp = pitch * 0.5;
-        const Real shp = Sin (hp);
-        const Real chp = Cos (hp);
-        
+		
+		// Z-Axis -> Attitude - Roll
+		const Real hr = roll * 0.5;
+		const Real shr = Sin (hr);
+		const Real chr = Cos (hr);
+		
         const Real chy_chp = chy * chp;
         const Real chy_shp = chy * shp;
         const Real shy_chp = shy * chp;
@@ -406,7 +409,7 @@ namespace math
     Quaternion<Real>
     Quaternion<Real>::FromEulerRad (const Vector3<Real>& rotationRad)
     {
-        Quaternionf::FromEulerRad(rotationRad.x, rotationRad.y, rotationRad.z);
+        return Quaternionf::FromEulerRad(rotationRad.x, rotationRad.y, rotationRad.z);
     }
     
     // --------------------------------------------------------------------------
@@ -452,12 +455,12 @@ namespace math
         Real pitch = 0.0;
         //*
         printf("%f\n", pole);
-        if ((0.5 - MO_EPSILON) < pole)
+        if ((0.5 - DC_EPSILON) < pole)
         {
             yaw = 2 * Atan2(q.x, q.w);
             return Vector3<Real> (roll, yaw, pitch);
         }
-        else if (pole < (MO_EPSILON - 0.5))
+        else if (pole < (DC_EPSILON - 0.5))
         {
             yaw = -2 * Atan2(q.x, q.w);
             return Vector3<Real> (roll, yaw, pitch);
@@ -507,7 +510,7 @@ namespace math
         if (pole == 0.0)
             return Asin(Clamp(2.0*(w*x - z*y), -1.0, 1.0));
         
-        return pole * math::MO_PI_OVER_2;
+        return pole * math::DC_PI_OVER_2;
     }
     
     // --------------------------------------------------------------------------
@@ -517,7 +520,7 @@ namespace math
     // --------------------------------------------------------------------------
     
     template <typename Real>
-    inline Real
+    inline const Real
     Quaternion<Real>::RotationAngle () const
     {
         // Compute the half angle.  Remember that w = cos(theta / 2)

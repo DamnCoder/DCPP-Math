@@ -13,70 +13,6 @@
 template <typename Real>
 inline
 const Vector3<Real>
-Vector3<Real>::Zero()
-{
-    return Vector3<Real>();
-}
-
-template <typename Real>
-inline
-const Vector3<Real>
-Vector3<Real>::One()
-{
-    return Vector3<Real>(1, 1, 1);
-}
-
-template <typename Real>
-inline
-const Vector3<Real>
-Vector3<Real>::Up()
-{
-    return Vector3<Real>(0, 1, 0);
-}
-
-template <typename Real>
-inline
-const Vector3<Real>
-Vector3<Real>::Down()
-{
-    return Vector3<Real>(0, -1, 0);
-}
-
-template <typename Real>
-inline
-const Vector3<Real>
-Vector3<Real>::Left()
-{
-    return Vector3<Real>(-1, 0, 0);
-}
-
-template <typename Real>
-inline
-const Vector3<Real>
-Vector3<Real>::Right()
-{
-    return Vector3<Real>(1, 0, 0);
-}
-
-template <typename Real>
-inline
-const Vector3<Real>
-Vector3<Real>::Forward()
-{
-    return Vector3<Real>(0, 0, 1);
-}
-
-template <typename Real>
-inline
-const Vector3<Real>
-Vector3<Real>::Backward()
-{
-    return Vector3<Real>(0, 0, -1);
-}
-
-template <typename Real>
-inline
-const Vector3<Real>
 Vector3<Real>::PositiveEulerAngles(const Vector3<Real>& euler)
 {
     //return Vector3<Real>(remainder(euler.x + 360.0, 360.0), remainder(euler.y + 360.0, 360.0), remainder(euler.z + 360.0, 360.0));
@@ -104,8 +40,8 @@ inline
 Vector3<Real>
 Vector3<Real>::FromPolarAngles(Real zenith, Real azimuth)
 {
-    Real lat = zenith * (MO_2PI)/255.0;
-    Real lng = azimuth * (MO_2PI)/255.0;
+    Real lat = zenith * (DC_PI2)/255.0;
+    Real lng = azimuth * (DC_PI2)/255.0;
     
     return Vector3<Real>(std::cos(lng) * std::sin(lat), std::sin(lng) * std::sin(lat), std::cos(lat));
 }
