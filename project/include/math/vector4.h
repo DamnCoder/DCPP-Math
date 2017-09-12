@@ -57,7 +57,7 @@ namespace math
         operator const Real *() const { return vec; }
         
     public:
-        void normalize ();
+        void Normalize ();
         
         union
         {

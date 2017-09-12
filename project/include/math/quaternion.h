@@ -39,13 +39,12 @@ namespace math
 		static Vector3<Real>	EulerRad (const Quaternion<Real>& q);
 		
 	public:
-		const Real		GimbalPole() const;
-		const Real		YawRad() const;
-		const Real		PitchRad() const;
-		const Real		RollRad() const;
-		
-		const Real		RotationAngle () const;
-		Vector3<Real>	RotationAxis () const;
+		const Real				GimbalPole() const;
+		const Real				YawRad() const;
+		const Real				PitchRad() const;
+		const Real				RollRad() const;
+		const Real				RotationAngle () const;
+		Vector3<Real>			RotationAxis () const;
 		
 		// Getters / Setters
 		/*
@@ -59,6 +58,7 @@ namespace math
 	public:
         // Constructors
         Quaternion () { }
+		Quaternion (Real x, Real y, Real z): x (x), y (y), z (z), w (0.0) { ComputeW(); }
         Quaternion (Real x, Real y, Real z, Real w): x (x), y (y), z (z), w (w) {}
         Quaternion (const Matrix4x4<Real>& matrix) { FromMatrix(matrix); }
         
@@ -248,7 +248,7 @@ namespace math
     inline void
     Quaternion<Real>::Rotate (Vector3<Real>& v) const
     {
-        Quaternion<Real> qf = *this * v * ~(*this);
+        Quaternion<Real> qf = (*this) * v * ~(*this);
         v.x = qf.x;
         v.y = qf.y;
         v.z = qf.z;
@@ -266,53 +266,6 @@ namespace math
     inline void
     Quaternion<Real>::FromMatrix (const Matrix4x4<Real>& m)
     {
-        /*
-        const Real trace = m.m11 + m.m22 + m.m33;
-        if (trace > 0.0)
-        {
-            const Real root = 0.5f / std::sqrt(trace + 1.0);
-            w = 0.25 / root;
-            x = (m.m32 - m.m23) * root;
-            y = (m.m13 - m.m31) * root;
-            z = (m.m21 - m.m12) * root;
-        }
-        else
-        {
-            if (m.m22 < m.m11 && m.m33 < m.m11)
-            {
-                //a[0][0] - a[1][1] - a[2][2])
-                const Real root = 2.0 * std::sqrtf(1.0 + m.m11 - m.m22 - m.m33);
-                const Real oneOverRoot = 1.0 / root;
-                
-                w = (m.m32 - m.m23) * oneOverRoot;
-                x = 0.25f * root;
-                y = (m.m12 + m.m21) * oneOverRoot;
-                z = (m.m13 + m.m31) * oneOverRoot;
-            }
-            else if (m.m33 < m.m22)
-            {
-                // 1.0f + a[1][1] - a[0][0] - a[2][2]
-                const Real root = 2.0 * std::sqrtf(1.0 + m.m22 - m.m11 - m.m33);
-                const Real oneOverRoot = 1.0 / root;
-                
-                w = (m.m13 - m.m31) * oneOverRoot;
-                x = (m.m12 + m.m21) * oneOverRoot;
-                y = 0.25f * root;
-                z = (m.m23 + m.m32) * oneOverRoot;
-            }
-            else
-            {
-                // 1.0f + a[2][2] - a[0][0] - a[1][1]
-                const Real root = 2.0 * std::sqrtf(1.0 + m.m33 - m.m11 - m.m22);
-                const Real oneOverRoot = 1.0 / root;
-                
-                w = (m.m21 - m.m12) * oneOverRoot;
-                x = (m.m13 + m.m31) * oneOverRoot;
-                y = (m.m23 + m.m32) * oneOverRoot;
-                z = 0.25f * root;
-            }
-        }
-        */
         const Real trace = m.m11 + m.m22 + m.m33 + 1.0;
         
 		if (trace > DC_EPSILON)
@@ -425,14 +378,14 @@ namespace math
      Examples:
      http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToEuler/steps/index.htm
      
-     // X-Axis -> Attitude - Roll
-     attitude = asin(2*qx*qy + 2*qz*qw)
-     
+     // X-Axis -> Bank - Pitch
+	 bank = atan2(2*qx*qw-2*qy*qz , 1 - 2*qx2 - 2*qz2)
+	 
      // Y-Axis -> Heading - Yaw
      heading = atan2(2*qy*qw-2*qx*qz , 1 - 2*qy2 - 2*qz2)
      
-     // Z-Axis -> Bank - Pitch
-     bank = atan2(2*qx*qw-2*qy*qz , 1 - 2*qx2 - 2*qz2)
+     // Z-Axis -> Attitude - Roll
+	 attitude = asin(2*qx*qy + 2*qz*qw)
      */
     template <typename Real>
     inline
@@ -444,35 +397,28 @@ namespace math
         const Real sqz = q.z * q.z;
         
         const Real pole = q.GimbalPole();
-        
-        // X-Axis -> Attitude - Roll
-        const Real roll = Asin(Clamp(2.0*(q.x * q.y + q.z * q.w), -1.0, 1.0));
-        
-        // Y-Axis -> Heading - Yaw
-        Real yaw = 0.0;
 		
-        // Z-Axis -> Bank - Pitch
+        Real yaw = 0.0;
         Real pitch = 0.0;
-        //*
-        printf("%f\n", pole);
+		const Real roll = Asin(Clamp(2.0*(q.x * q.y + q.z * q.w), -1.0, 1.0));
+		
         if ((0.5 - DC_EPSILON) < pole)
         {
             yaw = 2 * Atan2(q.x, q.w);
-            return Vector3<Real> (roll, yaw, pitch);
+            return Vector3<Real> (pitch, yaw, roll);
         }
         else if (pole < (DC_EPSILON - 0.5))
         {
             yaw = -2 * Atan2(q.x, q.w);
-            return Vector3<Real> (roll, yaw, pitch);
+            return Vector3<Real> (pitch, yaw, roll);
         }
-        //*/
+		
         yaw = Atan2(2.0*(q.y * q.w - q.x * q.z), 1.0 - 2.0 * (sqy + sqz));
         pitch = Atan2(2.0*(q.x * q.w - q.y * q.z), 1.0 - 2.0 * (sqx + sqz));
     
-        return Vector3<Real> (roll, yaw, pitch);
+        return Vector3<Real> (pitch, yaw, roll);
     }
 
-    
     template <typename Real>
     inline const Real
     Quaternion<Real>::GimbalPole() const
@@ -558,11 +504,9 @@ namespace math
         Real oneOverSinThetaOver2 = 1.0 / std::sqrt (sinThetaOver2Sq);
         
         // Return axis of rotation
-        return Vector3<Real> (
-                              x * oneOverSinThetaOver2,
+        return Vector3<Real> (x * oneOverSinThetaOver2,
                               y * oneOverSinThetaOver2,
-                              z * oneOverSinThetaOver2
-                              );
+                              z * oneOverSinThetaOver2);
     }
     
     // --------------------------------------------------------------------------
@@ -614,7 +558,10 @@ namespace math
     inline Quaternion<Real> &
     Quaternion<Real>::operator-= (const Quaternion<Real> &q)
     {
-        x -= q.x; y -= q.y; z -= q.z; w -= q.w;
+        x -= q.x;
+		y -= q.y;
+		z -= q.z;
+		w -= q.w;
         return *this;
     }
     
@@ -637,7 +584,10 @@ namespace math
     inline Quaternion<Real> &
     Quaternion<Real>::operator*= (const Quaternion<Real> &q)
     {
-        *this = *this * q;
+		x = (x * q.w) + (w * q.x) + (y * q.z) - (z * q.y);
+		y = (y * q.w) + (w * q.y) + (z * q.x) - (x * q.z);
+		z = (z * q.w) + (w * q.z) + (x * q.y) - (y * q.x);
+		w = (w * q.w) - (x * q.x) - (y * q.y) - (z * q.z);
         return *this;
     }
     
@@ -647,27 +597,28 @@ namespace math
     {
         // q * v = q * p where p = <0,v>
         // Thus, we can simplify the operations.
-        return Quaternion<Real> (
-                                 - (x * v.x) - (y * v.y) - (z * v.z),
-                                 (w * v.x) + (y * v.z) - (z * v.y),
-                                 (w * v.y) + (z * v.x) - (x * v.z),
-                                 (w * v.z) + (x * v.y) - (y * v.x)
-                                 );
+		return Quaternion<Real> (  (w * v.x) + (y * v.z) - (z * v.y),
+								   (w * v.y) + (z * v.x) - (x * v.z),
+								   (w * v.z) + (x * v.y) - (y * v.x),
+								 - (x * v.x) - (y * v.y) - (z * v.z));
     }
     
     template <typename Real>
     inline Quaternion<Real> &
     Quaternion<Real>::operator*= (const Vector3<Real> &v)
     {
-        *this = *this * v;
-        return *this;
+		x =		(w * v.x) + (y * v.z) - (z * v.y);
+		y =		(w * v.y) + (z * v.x) - (x * v.z);
+		z =		(w * v.z) + (x * v.y) - (y * v.x);
+		w = -	(x * v.x) - (y * v.y) - (z * v.z);
+		return *this;
     }
     
     template <typename Real>
     inline Quaternion<Real>
     Quaternion<Real>::operator* (Real k) const
     {
-        return Quaternion<Real> (w * k, x * k, y * k, z * k);
+        return Quaternion<Real> (x * k, y * k, z * k, w * k);
     }
     
     template <typename Real>
@@ -683,7 +634,7 @@ namespace math
     Quaternion<Real>::operator/ (Real k) const
     {
         Real oneOverK = 1.0 / k;
-        return Quaternion<Real> (w * oneOverK, x * oneOverK, y * oneOverK, z * oneOverK);
+        return Quaternion<Real> (x * oneOverK, y * oneOverK, z * oneOverK, w * oneOverK);
     }
     
     template <typename Real>
@@ -700,7 +651,7 @@ namespace math
     inline Quaternion<Real>
     Quaternion<Real>::operator~ () const
     {
-        return Quaternion<Real> (w, -x, -y, -z);
+        return Quaternion<Real> (-x, -y, -z, w);
     }
     
     
@@ -709,7 +660,7 @@ namespace math
     inline Quaternion<Real>
     Quaternion<Real>::operator- () const
     {
-        return Quaternion<Real> (-w, -x, -y, -z);
+        return Quaternion<Real> (-x, -y, -z, -w);
     }
     
     
@@ -724,7 +675,7 @@ namespace math
     inline Quaternion<Real>
     operator* (Real k, const Quaternion<Real> &q)
     {
-        return Quaternion<Real> (q.w * k, q.x * k, q.y * k, q.z * k);
+        return Quaternion<Real> (q.x * k, q.y * k, q.z * k, q.w * k);
     }
     
     // Quaternion dot product
@@ -732,7 +683,7 @@ namespace math
     inline Real
     DotProduct (const Quaternion<Real> &a, const Quaternion<Real> &b)
     {
-        return ((a.w * b.w) + (a.x * b.x) + (a.y * b.y) + (a.z * b.z));
+        return ((a.x * b.x) + (a.y * b.y) + (a.z * b.z) + (a.w * b.w));
     }
     
     // Compute the quaternion conjugate.  This is the quaternian
@@ -741,7 +692,7 @@ namespace math
     inline Quaternion<Real>
     Conjugate (const Quaternion<Real> &q)
     {
-        return Quaternion<Real> (q.w, -q.x, -q.y, -q.z);
+        return Quaternion<Real> (-q.x, -q.y, -q.z, q.w);
     }
     
     
@@ -751,8 +702,8 @@ namespace math
     Inverse (const Quaternion<Real> &q)
     {
         // Assume this is a unit quaternion! No check for this!
-        Quaternion<Real> res (q.w, -q.x, -q.y, -q.z);
-        res.normalize ();
+        Quaternion<Real> res (-q.x, -q.y, -q.z, q.w);
+        res.Normalize ();
         return res;
     }
     
@@ -778,10 +729,10 @@ namespace math
         Real sinThetaOver2 = std::sin (thetaOver2);
         
         // Set the values
-        res.w = std::cos (thetaOver2);
         res.x = axis.x * sinThetaOver2;
         res.y = axis.y * sinThetaOver2;
         res.z = axis.z * sinThetaOver2;
+		res.w = std::cos (thetaOver2);
         
         return res;
     }
@@ -882,7 +833,7 @@ namespace math
         Vector3<Real> n (q.x, q.y, q.z);
         n *= std::sin (newAlpha) / std::sin (alpha);
         
-        return Quaternion<Real> (std::cos (newAlpha), n);
+        return Quaternion<Real> (n, std::cos (newAlpha));
     }
     
     
@@ -955,12 +906,10 @@ namespace math
         }
         
         // Interpolate and return new quaternion
-        return Quaternion<Real> (
-                                 (k0 * q0.w) + (k1 * q1w),
-                                 (k0 * q0.x) + (k1 * q1x),
+        return Quaternion<Real> ((k0 * q0.x) + (k1 * q1x),
                                  (k0 * q0.y) + (k1 * q1y),
-                                 (k0 * q0.z) + (k1 * q1z)
-                                 );
+                                 (k0 * q0.z) + (k1 * q1z),
+								 (k0 * q0.w) + (k1 * q1w));
     }
     
     
